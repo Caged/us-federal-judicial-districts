@@ -1,7 +1,17 @@
-GENERATED_FILES = \
-	districts.json
+all: us.json
 
-all: $(GENERATED_FILES)
+clean:
+	rm -rf -- us.json \
+		build/*-ungrouped.* \
+		build/*.json \
+		build/judicial-districts.shp \
+		build/judicial-districts.sbn \
+		build/judicial-districts.sbx \
+		build/judicial-districts.shx \
+		build/judicial-districts.prj \
+		build/judicial-districts.dbf
+
+.PHONY: all clean
 
 build/judicial-districts.shp:
 	rm -rf $(basename $@)
@@ -10,11 +20,8 @@ build/judicial-districts.shp:
 	for file in $(basename $@)/*; do chmod 644 $$file; mv $$file $(basename $@).$${file##*.}; done
 	rmdir $(basename $@)
 
-# build/us-judicial-districts.shp:
-# 	mkdir -p $(basename $@)
-# 	tar -xvzf us-judicial-districts.zip -C $(basename $@)
 
-build/counties-ungrouped.json: build/judicial-districts.shp
+build/counties.json: build/judicial-districts.shp
 	node_modules/.bin/topojson \
 		-o $@ \
 		--no-pre-quantization \
@@ -24,24 +31,23 @@ build/counties-ungrouped.json: build/judicial-districts.shp
 		--id-property=+FIPS \
 		-- counties=build/judicial-districts.shp
 
-# group polygons into multipolygons
-build/counties.json: build/counties-ungrouped.json
-	node_modules/.bin/topojson-group \
-		-o $@ \
-		-- build/counties-ungrouped.json
+# # group polygons into multipolygons
+# build/counties.json: build/counties-ungrouped.json
+# 	node_modules/.bin/topojson-group \
+# 		-o $@ \
+# 		-- build/counties-ungrouped.json
 
 build/districts.json: build/counties.json
 	node_modules/.bin/topojson-merge \
 		-o $@ \
 		--in-object=counties \
 		--out-object=districts \
-		--key='d.jscode' \
-		-- build/counties.json
+		--key='d.properties.jdcode' \
+		-- $<
 
 us.json: build/districts.json
 	node_modules/.bin/topojson-merge \
 		-o $@ \
 		--in-object=districts \
 		--out-object=nation \
-		--no-key \
-		-- build/districts.json
+		-- $<

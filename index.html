@@ -1,17 +1,21 @@
 <!doctype html>
 <meta charset="utf-8">
 <style type="text/css" media="screen">
-  .district-outline {
+  .district {
     stroke: #fff;
-    stroke-width: 0.5;
-    fill-opacity: 0.7;
+    stroke-width: 0.8;
+    fill-opacity: 0.6;
   }
 
-  .districts {
+  .district:hover {
+    fill-opacity: 0.8;
+  }
+
+  .county {
     fill: none;
     stroke: #333;
     stroke-width: 0.5;
-    stroke-opacity: 0.3;
+    stroke-opacity: 0.6;
     shape-rendering: crispedges;
   }
 
@@ -21,6 +25,7 @@
     font-weight: bold;
     fill-opacity: 1;
     text-anchor: middle;
+    stroke: none;
   }
 </style>
 <body>
@@ -40,38 +45,29 @@
   d3.json('us.json', function(error, us) {
     if(error) return console.error(error)
 
-    data = d3.nest()
-      .key(function(d) { return d.properties.jdcode })
-      .sortKeys(function(a, b) { return a - b })
-      .entries(us.objects.counties.geometries)
-
     svg.append('path')
       .datum(topojson.mesh(us, us.objects.counties))
-      .attr('class', 'districts')
+      .attr('class', 'county')
       .attr('d', path)
 
     districts = svg.selectAll('.district')
-      .data(data)
+      .data(topojson.feature(us, us.objects.districts).features)
     .enter().append('g')
       .attr('class', 'district')
 
     districts.append('path')
-      .attr('class', 'district-outline')
-      .attr('d', function(d) { return path(topojson.merge(us, d.values)) })
+      .attr('d', path)
       .style('fill', function(d, i) { return color(i) })
 
     districts.each(function(d) {
-      var shape = topojson.merge(us, d.values),
-          center = path.centroid(shape)
-
+      var center = path.centroid(d)
       d3.select(this).append('text')
         .attr('class', 'label')
         .attr('dx', function(d) { return center[0] })
         .attr('dy', function(d) { return center[1] })
-        .text(d.key)
+        .text(d.properties.jdcode)
     })
-    // svg.append('path')
-    //   .datum(topojson.merge(us, districts))
+
   })
 </script>
 </body>

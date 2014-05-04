@@ -1,0 +1,27 @@
+#!/usr/bin/env node
+
+var fs  = require('fs'),
+          require('fast-csv')
+
+
+topo = JSON.parse(fs.readFileSync('judicial-districts.json'))
+
+var parseRecord = function(record) {
+  console.log(record);
+}
+
+var data = []
+function terminated(record) {
+  if(record['Date of Termination'] === '') {
+    data.push(record)
+  }
+}
+
+function parse() {
+
+}
+
+
+csv.fromPath('build/judges.csv', { headers: true })
+  .on('record', terminated)
+  .on('end', parse)

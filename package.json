@@ -3,6 +3,7 @@
   "version": "0.0.1",
   "private": true,
   "dependencies": {
+    "fast-csv": "0.2.4",
     "topojson": ">=1.6.2 <2"
   }
 }

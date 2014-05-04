@@ -3,13 +3,14 @@
 <style type="text/css" media="screen">
   .district-outline {
     stroke: #fff;
-    fill-opacity: 0.5;
+    stroke-width: 0.5;
+    fill-opacity: 0.7;
   }
 
   .districts {
     fill: none;
     stroke: #333;
-    stroke-width: 1;
+    stroke-width: 0.5;
     stroke-opacity: 0.3;
     shape-rendering: crispedges;
   }
@@ -36,15 +37,16 @@
     .attr('width', width)
     .attr('height', height)
 
-  d3.json('us-judicial-districts.json', function(error, us) {
+  d3.json('us.json', function(error, us) {
     if(error) return console.error(error)
 
     data = d3.nest()
       .key(function(d) { return d.properties.jdcode })
-      .entries(us.objects.districts.geometries)
+      .sortKeys(function(a, b) { return a - b })
+      .entries(us.objects.counties.geometries)
 
     svg.append('path')
-      .datum(topojson.mesh(us, us.objects.districts))
+      .datum(topojson.mesh(us, us.objects.counties))
       .attr('class', 'districts')
       .attr('d', path)
 

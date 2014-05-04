@@ -1,6 +1,4 @@
-# US Judicial Districts
-
-US Federal Judicial Districts
+# US Federal Judicial Districts
 
 Sources:
 

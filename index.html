@@ -1,0 +1,75 @@
+<!doctype html>
+<meta charset="utf-8">
+<style type="text/css" media="screen">
+  .district-outline {
+    stroke: #fff;
+    fill-opacity: 0.5;
+  }
+
+  .districts {
+    fill: none;
+    stroke: #333;
+    stroke-width: 1;
+    stroke-opacity: 0.3;
+    shape-rendering: crispedges;
+  }
+
+  .label {
+    font-family: Helvetica;
+    font-size: 11px;
+    font-weight: bold;
+    fill-opacity: 1;
+    text-anchor: middle;
+  }
+</style>
+<body>
+<script src="http://d3js.org/d3.v3.min.js"></script>
+<script src="http://d3js.org/topojson.v1.min.js"></script>
+<script type="text/javascript" charset="utf-8">
+  var width = 960,
+      height = 600
+
+  var path = d3.geo.path()
+  var color = d3.scale.category20()
+
+  var svg = d3.select("body").append('svg')
+    .attr('width', width)
+    .attr('height', height)
+
+  d3.json('us-judicial-districts.json', function(error, us) {
+    if(error) return console.error(error)
+
+    data = d3.nest()
+      .key(function(d) { return d.properties.jdcode })
+      .entries(us.objects.districts.geometries)
+
+    svg.append('path')
+      .datum(topojson.mesh(us, us.objects.districts))
+      .attr('class', 'districts')
+      .attr('d', path)
+
+    districts = svg.selectAll('.district')
+      .data(data)
+    .enter().append('g')
+      .attr('class', 'district')
+
+    districts.append('path')
+      .attr('class', 'district-outline')
+      .attr('d', function(d) { return path(topojson.merge(us, d.values)) })
+      .style('fill', function(d, i) { return color(i) })
+
+    districts.each(function(d) {
+      var shape = topojson.merge(us, d.values),
+          center = path.centroid(shape)
+
+      d3.select(this).append('text')
+        .attr('class', 'label')
+        .attr('dx', function(d) { return center[0] })
+        .attr('dy', function(d) { return center[1] })
+        .text(d.key)
+    })
+    // svg.append('path')
+    //   .datum(topojson.merge(us, districts))
+  })
+</script>
+</body>

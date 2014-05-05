@@ -47,7 +47,7 @@
     .attr('height', height)
 
   d3.json('us.json', function(error, us) {
-    if(error) return console.error(error)
+    if(error) return console.error("Boom goes the dynamite: " + error)
 
     var dem = 0, rep = 0
     us.objects.districts.geometries.forEach(function(d) {

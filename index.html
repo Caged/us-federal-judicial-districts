@@ -1,6 +1,10 @@
 <!doctype html>
 <meta charset="utf-8">
 <style type="text/css" media="screen">
+  body {
+    margin: 0;
+  }
+
   .district {
     stroke: #fff;
     stroke-width: 1;
@@ -25,6 +29,7 @@
     fill-opacity: 1;
     text-anchor: middle;
     stroke: none;
+    pointer-events: none;
   }
 </style>
 <body>
@@ -47,14 +52,12 @@
     var dem = 0, rep = 0
     us.objects.districts.geometries.forEach(function(d) {
       d.properties.judges.forEach(function(j) {
-        switch(j.ppa) {
-          case 'Democratic': dem++; break
-          case 'Republican': rep++; break
-        }
+        if(j.ppa === 'Democratic') dem++
+        if(j.ppa === 'Republican') rep++
       })
     })
 
-    console.log(dem, rep);
+    console.log(dem + " Democrat appointments", rep + " Republican appointments");
 
     svg.append('path')
       .datum(topojson.mesh(us, us.objects.counties))
@@ -63,20 +66,16 @@
 
     districts = svg.selectAll('.district')
       .data(topojson.feature(us, us.objects.districts).features)
-    .enter().append('g')
+    .enter().append('path')
       .attr('class', 'district')
-
-    districts.append('path')
       .attr('d', path)
       .style('fill', function(d, i) { return color(i) })
       .on('click', function(district) {
         var d = 0, r = 0
 
         var names = district.properties.judges.map(function(j) {
-          switch(j.ppa) {
-            case 'Democratic': d++; break
-            case 'Republican': r++; break
-          }
+          if(j.ppa === 'Democratic') d++
+          if(j.ppa === 'Republican') r++
 
           return j.ppa + ": " + j.name
         }).join("\n")
@@ -84,9 +83,10 @@
         console.log("D: " + d, "R: " + r, "\n\n" + names);
       })
 
+    var labels = svg.append('g')
     districts.each(function(d) {
       var center = path.centroid(d)
-      d3.select(this).append('text')
+      labels.append('text')
         .attr('class', 'label')
         .attr('dx', function(d) { return center[0] })
         .attr('dy', function(d) { return center[1] })

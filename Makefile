@@ -20,30 +20,25 @@ build/judicial-districts.shp:
 	for file in $(basename $@)/*; do chmod 644 $$file; mv $$file $(basename $@).$${file##*.}; done
 	rmdir $(basename $@)
 
-
 build/counties.json: build/judicial-districts.shp
 	node_modules/.bin/topojson \
 		-o $@ \
 		--no-pre-quantization \
 		--post-quantization=1e6 \
 		--simplify=7e-7 \
-		-p jdcode=+JDCODE,state=State \
+		-p jdcode=+JDCODE,state=State,name=JD_NAME \
 		--id-property=+FIPS \
 		-- counties=build/judicial-districts.shp
 
-# # group polygons into multipolygons
-# build/counties.json: build/counties-ungrouped.json
-# 	node_modules/.bin/topojson-group \
-# 		-o $@ \
-# 		-- build/counties-ungrouped.json
-
 build/districts.json: build/counties.json
+	rm $(basename $@)-unreconciled.json
 	node_modules/.bin/topojson-merge \
-		-o $@ \
+		-o $(basename $@)-unreconciled.json \
 		--in-object=counties \
 		--out-object=districts \
 		--key='d.properties.jdcode' \
 		-- $<
+		./reconcile-judges < $(basename $@)-unreconciled.json > $@
 
 us.json: build/districts.json
 	node_modules/.bin/topojson-merge \

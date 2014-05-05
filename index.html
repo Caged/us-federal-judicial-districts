@@ -3,7 +3,7 @@
 <style type="text/css" media="screen">
   .district {
     stroke: #fff;
-    stroke-width: 0.8;
+    stroke-width: 1;
     fill-opacity: 0.6;
   }
 
@@ -16,7 +16,6 @@
     stroke: #333;
     stroke-width: 0.5;
     stroke-opacity: 0.6;
-    shape-rendering: crispedges;
   }
 
   .label {
@@ -45,6 +44,18 @@
   d3.json('us.json', function(error, us) {
     if(error) return console.error(error)
 
+    var dem = 0, rep = 0
+    us.objects.districts.geometries.forEach(function(d) {
+      d.properties.judges.forEach(function(j) {
+        switch(j.ppa) {
+          case 'Democratic': dem++; break
+          case 'Republican': rep++; break
+        }
+      })
+    })
+
+    console.log(dem, rep);
+
     svg.append('path')
       .datum(topojson.mesh(us, us.objects.counties))
       .attr('class', 'county')
@@ -58,6 +69,20 @@
     districts.append('path')
       .attr('d', path)
       .style('fill', function(d, i) { return color(i) })
+      .on('click', function(district) {
+        var d = 0, r = 0
+
+        var names = district.properties.judges.map(function(j) {
+          switch(j.ppa) {
+            case 'Democratic': d++; break
+            case 'Republican': r++; break
+          }
+
+          return j.ppa + ": " + j.name
+        }).join("\n")
+
+        console.log("D: " + d, "R: " + r, "\n\n" + names);
+      })
 
     districts.each(function(d) {
       var center = path.centroid(d)

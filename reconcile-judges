@@ -48,7 +48,6 @@ function reconcile() {
             name: judge['Judge First Name'] + " " + judge['Judge Last Name'],
             jid: judge['Judge Identification Number'],
             ppa: judge['Party Affiliation of President'],
-            pres: judge['President name'],
             race: judge['Race or Ethnicity'],
             gender: judge['Gender'],
             date: judge['Commission Date']

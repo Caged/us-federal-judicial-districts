@@ -1,0 +1,72 @@
+#!/usr/bin/env node
+
+// Because no one bothered to standardize on court names or give them an ID and
+// assign judges to one, we're left with the cesspool you see below
+//
+var fs  = require('fs'),
+    csv = require('fast-csv')
+
+var topo = JSON.parse(fs.readFileSync('build/districts-unreconciled.json'))
+
+var judges   = [],
+    states = [],
+    names = [],
+    locations = ['Northern', 'Southern', 'Middle', 'Western', 'Eastern']
+
+// Only keep active US District Court judges
+function terminated(record) {
+  var termination = record['Date of Termination'],
+      death       = record['Death year'],
+      courtType   = record['Court Type'],
+      retired     = record['Retirement from Active Service']
+
+  if(termination === '' && courtType === 'USDC' && retired === '') {
+    judges.push(record)
+  }
+}
+
+function reconcile() {
+  topo.objects.districts.geometries.forEach(function(geo) {
+    geo.properties.judges = []
+
+    if(geo.properties.name === null) return;
+
+    var parts = geo.properties.name.split(' '),
+        geostate = null,
+        geolocation = null
+
+    if(parts.length > 1) {
+      geolocation = parts.pop()
+      geostate    = parts.join(' ')
+    } else {
+      geostate = parts[0]
+    }
+
+    judges.forEach(function(judge) {
+      var cname = judge['Court Name'],
+          info  = {
+            name: judge['Judge First Name'] + " " + judge['Judge Last Name'],
+            ppa: judge['Party Affiliation of President']
+            // race: judge['Race or Ethnicity'],
+            // gender: judge['Gender'],
+            // date: judge['Commission Date']
+          }
+
+      if(cname.indexOf(geostate) !== -1 && (geolocation && cname.indexOf(geolocation) !== -1)) {
+        geo.properties.judges.push(info)
+      } else if(!geolocation && cname.indexOf(geostate) != -1) {
+        geo.properties.judges.push(info)
+      }
+    })
+  })
+
+  console.log(JSON.stringify(topo));
+}
+
+csv.fromPath('build/states.csv', { headers: true })
+  .on('record', function(state) { states.push(state) })
+  .on('end', function() {
+    csv.fromPath('build/judges.csv', { headers: true })
+      .on('record', terminated)
+      .on('end', reconcile)
+  })

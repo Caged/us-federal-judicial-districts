@@ -1,0 +1,98 @@
+<!doctype html>
+<meta charset="utf-8">
+<style type="text/css" media="screen">
+  body {
+    margin: 0;
+  }
+
+  .district {
+    stroke: #fff;
+    stroke-width: 1;
+    fill-opacity: 0.6;
+  }
+
+  .district:hover {
+    fill-opacity: 0.8;
+  }
+
+  .county {
+    fill: none;
+    stroke: #333;
+    stroke-width: 0.5;
+    stroke-opacity: 0.6;
+  }
+
+  .label {
+    font-family: Helvetica;
+    font-size: 11px;
+    font-weight: bold;
+    fill-opacity: 1;
+    text-anchor: middle;
+    stroke: none;
+    pointer-events: none;
+  }
+</style>
+<body>
+<script src="http://d3js.org/d3.v3.min.js"></script>
+<script src="http://d3js.org/topojson.v1.min.js"></script>
+<script type="text/javascript" charset="utf-8">
+  var width = 960,
+      height = 600
+
+  var path = d3.geo.path()
+  var color = d3.scale.category20()
+
+  var svg = d3.select("body").append('svg')
+    .attr('width', width)
+    .attr('height', height)
+
+  d3.json('us.json', function(error, us) {
+    if(error) return console.error("Boom goes the dynamite: " + error)
+
+    var dem = 0, rep = 0
+    us.objects.districts.geometries.forEach(function(d) {
+      d.properties.judges.forEach(function(j) {
+        if(j.ppa === 'Democratic') dem++
+        if(j.ppa === 'Republican') rep++
+      })
+    })
+
+    console.log(dem + " Democrat appointments", rep + " Republican appointments");
+
+    svg.append('path')
+      .datum(topojson.mesh(us, us.objects.counties))
+      .attr('class', 'county')
+      .attr('d', path)
+
+    districts = svg.selectAll('.district')
+      .data(topojson.feature(us, us.objects.districts).features)
+    .enter().append('path')
+      .attr('class', 'district')
+      .attr('d', path)
+      .style('fill', function(d, i) { return color(i) })
+      .on('click', function(district) {
+        var d = 0, r = 0
+
+        var names = district.properties.judges.map(function(j) {
+          if(j.ppa === 'Democratic') d++
+          if(j.ppa === 'Republican') r++
+
+          return j.ppa + ": " + j.name
+        }).join("\n")
+
+        console.log("D: " + d, "R: " + r, "\n\n" + names);
+      })
+
+    var labels = svg.append('g')
+    districts.each(function(d) {
+      var center = path.centroid(d)
+      labels.append('text')
+        .attr('class', 'label')
+        .attr('dx', function(d) { return center[0] })
+        .attr('dy', function(d) { return center[1] })
+        .text(d.properties.jdcode)
+    })
+
+  })
+</script>
+</body>

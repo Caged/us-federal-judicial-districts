@@ -46,11 +46,10 @@ function reconcile() {
       var cname = judge['Court Name'],
           info  = {
             name: judge['Judge First Name'] + " " + judge['Judge Last Name'],
-            jid: judge['Judge Identification Number'],
-            ppa: judge['Party Affiliation of President'],
-            race: judge['Race or Ethnicity'],
-            gender: judge['Gender'],
-            date: judge['Commission Date']
+            ppa: judge['Party Affiliation of President']
+            // race: judge['Race or Ethnicity'],
+            // gender: judge['Gender'],
+            // date: judge['Commission Date']
           }
 
       if(cname.indexOf(geostate) !== -1 && (geolocation && cname.indexOf(geolocation) !== -1)) {
